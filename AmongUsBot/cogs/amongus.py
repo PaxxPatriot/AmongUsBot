@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import re
+from collections import defaultdict
 
+import discord
 from discord.ext import commands
 
 
@@ -10,17 +12,25 @@ class Amongus(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.last_invite_code = None
+        self.last_invite_code = defaultdict(lambda: None)
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.guild is None:
+            return
+
         result = re.match(r"^[A-Z]{6}$", message.content)
         if result:
-            if self.last_invite_code is None:
-                self.last_invite_code = message
+            if not self.last_invite_code[message.guild]:
+                self.last_invite_code[message.guild] = message
             else:
-                await self.last_invite_code.delete()
-                self.last_invite_code = message
+                try:
+                    await self.last_invite_code[message.guild].delete()
+                except discord.Forbidden:
+                    await message.channel.send('I am missing permissions to delete messages.')
+                except discord.HTTPException:
+                    pass
+                self.last_invite_code[message.guild] = message
 
 
 def setup(bot):
