@@ -31,6 +31,8 @@ class Amongus(commands.Cog):
                 except discord.HTTPException:
                     pass
                 self.last_invite_code[message.guild] = message
+        elif message.application:
+            await message.channel.send(message.activity['party_id'])
 
 
 def setup(bot):
